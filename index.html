@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlyAhad - Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --sidebar-width: 260px;
+      --sidebar-collapsed-width: 70px;
+      --primary-color: #FFA412;
+      --bg-body: #F5F7F9;
+      --sidebar-bg: #FFFFFF;
+      --header-height: 65px;
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --text-dark: #333333;
+      --text-muted: #6c757d;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-body);
+      overflow-x: hidden;
+    }
+
+    /* --- Header --- */
+    .app-header {
+      height: var(--header-height);
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: var(--sidebar-width);
+      background: #fff;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      transition: var(--transition-smooth);
+      border-bottom: 1px solid #edf2f9;
+    }
+
+    /* --- Sidebar --- */
+    .app-sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1001;
+      /* High z-index for mobile */
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition-smooth);
+      border-right: 1px solid #edf2f9;
+    }
+
+    .sidebar-header {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      /* Space for X button */
+      padding: 0 20px;
+      border-bottom: 1px solid #f8f9fa;
+    }
+
+    .sidebar-header img {
+      max-width: 150px;
+    }
+
+    /* Mobile Close Button (Hidden by default) */
+    .close-sidebar-btn {
+      display: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-dark);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px 0;
+    }
+
+    .nav-list {
+      padding: 0;
+      list-style: none;
+    }
+
+    .nav-item {
+      margin-bottom: 4px;
+      position: relative;
+    }
+
+    .nav-item a,
+    .dropdown-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 25px;
+      color: var(--text-dark);
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 400;
+      transition: var(--transition-smooth);
+    }
+
+    .nav-item i:first-child {
+      width: 25px;
+      font-size: 16px;
+      margin-right: 12px;
+      color: var(--text-muted);
+    }
+
+    .nav-item:hover>a,
+    .nav-item:hover>.dropdown-header,
+    .nav-item.active>a {
+      background: #F0F4FF;
+      color: var(--primary-color);
+    }
+
+    .nav-item.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: var(--primary-color);
+    }
+
+    .submenu {
+      max-height: 0;
+      overflow: hidden;
+      list-style: none;
+      padding-left: 0;
+      background: #fdfdfd;
+      transition: var(--transition-smooth);
+    }
+
+    .nav-item.open .submenu {
+      max-height: 500px;
+    }
+
+    .submenu li a {
+      padding: 10px 25px 10px 65px !important;
+      font-size: 13px;
+      color: #555;
+      position: relative;
+    }
+
+    .submenu li a::before {
+      content: "";
+      position: absolute;
+      left: 45px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      background: #ccc;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .submenu li a:hover::before {
+      background: var(--primary-color);
+    }
+
+    .arrow {
+      margin-left: auto;
+      font-size: 10px;
+      transition: transform 0.3s;
+    }
+
+    .nav-item.open .arrow {
+      transform: rotate(90deg);
+    }
+
+    /* --- Main Content --- */
+    .main-content {
+      padding-top: var(--header-height);
+      margin-left: var(--sidebar-width);
+      transition: var(--transition-smooth);
+      min-height: 100vh;
+    }
+
+    /* --- Desktop Toggle Logic --- */
+    body.sidebar-mini .app-sidebar {
+      width: var(--sidebar-collapsed-width);
+    }
+
+    body.sidebar-mini .app-sidebar span,
+    body.sidebar-mini .app-sidebar .arrow {
+      display: none;
+      /* Hide text on collapse */
+    }
+
+    body.sidebar-mini .app-header,
+    body.sidebar-mini .main-content {
+      left: var(--sidebar-collapsed-width);
+      margin-left: 0;
+    }
+
+    /* --- Mobile Styles & Overlay --- */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      /* Shadow color */
+      z-index: 1000;
+      display: none;
+      backdrop-filter: blur(2px);
+    }
+
+    @media (max-width: 991px) {
+      .app-sidebar {
+        transform: translateX(-100%);
+      }
+
+      .app-header,
+      .main-content {
+        left: 0;
+        margin-left: 0;
+      }
+
+      body.sidebar-open .app-sidebar {
+        transform: translateX(0);
+      }
+
+      body.sidebar-open .sidebar-overlay {
+        display: block;
+      }
+
+      .close-sidebar-btn {
+        display: block;
+        /* Show X in mobile */
+      }
+    }
+
+    .hero-container {
+      border-radius: 20px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.8s ease-in-out;
+      height: auto;
+      min-height: 100vh;
+      margin-top: 80px;
+      background: url(./img/bg.jpeg);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .nav-tabs-custom {
+      border: none;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    .nav-tabs-custom .nav-link {
+      color: #fff;
+      opacity: 0.8;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .nav-tabs-custom .nav-link.active {
+      background: var(--primary-color) !important;
+      color: #fff !important;
+      opacity: 1;
+    }
+
+    .search-wrapper {
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      color: #333;
+    }
+
+    .input-group-custom {
+      border: 1px solid #eee;
+      padding: 10px 15px;
+      border-radius: 10px;
+      background: #f9f9f9;
+      position: relative;
+    }
+
+    .input-group-custom label {
+      display: block;
+      font-size: 11px;
+      color: #888;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .input-group-custom input {
+      border: none;
+      background: transparent;
+      width: 100%;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .swap-circle {
+      width: 30px;
+      height: 30px;
+      background: var(--primary-color);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 5;
+      border: 2px solid #fff;
+      cursor: pointer;
+    }
+
+    .btn-search-main {
+      background: var(--primary-color);
+      color: #fff;
+      height: 100%;
+      width: 100%;
+      border-radius: 10px;
+      border: none;
+      font-size: 18px;
+      font-weight: 600;
+      transition: 0.3s;
+      padding: 12px;
+    }
+
+    .btn-search-main:hover {
+      background: #e69100;
+      transform: scale(1.02);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="page">
+    <header class="app-header">
+      <button id="sidebar-toggle" class="btn btn-light me-3"><i class="fa fa-bars"></i></button>
+      <div class="header-info-bar d-none d-md-flex align-items-center">
+        <span class="me-4"><i class="fa fa-phone text-warning me-2"></i> +8801937563157</span>
+        <span><i class="fa fa-envelope text-primary me-2"></i> sales@fastfly.com</span>
+      </div>
+      <div class="ms-auto d-flex align-items-center">
+        <div class="me-3 text-end d-none d-sm-block">
+          <small class="d-block text-muted">My Balance</small>
+          <span class="fw-bold">BDT: 0</span>
+        </div>
+        <img src="https://classicit.com.bd/images/team/20260218022233F0kxgc.webp" class="rounded-circle border"
+          width="35" height="35">
+      </div>
+    </header>
+
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <a href="index.html"> <img src="https://i.ibb.co.com/nNXMHHqx/Fast-Flight.png" alt="Fast-Flight" border="0"
+            width="100%">
+        </a>
+        <div class="close-sidebar-btn" id="close-sidebar"><i class="fa fa-times"></i></div>
+      </div>
+      <div class="sidebar-content">
+        <ul class="nav-list">
+          <li class="nav-item active"><a href="#"><i class="fa-solid fa-house-chimney"></i> <span>Home</span></a></li>
+
+          <li class="nav-item has-dropdown">
+            <div class="dropdown-header"><i class="fa-solid fa-map-location-dot"></i> <span>Packages</span> <i
+                class="fa-solid fa-chevron-right arrow"></i></div>
+            <ul class="submenu">
+              <li><a href="#">Tour Packages</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item has-dropdown">
+            <div class="dropdown-header"><i class="fa-solid fa-plane-up"></i> <span>Flight Date Modify</span> <i
+                class="fa-solid fa-chevron-right arrow"></i></div>
+            <ul class="submenu">
+              <li><a href="#">Flight Date Change</a></li>
+              <li><a href="#">List</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item has-dropdown">
+            <div class="dropdown-header"><i class="fa-solid fa-ticket"></i> <span>Booking</span> <i
+                class="fa-solid fa-chevron-right arrow"></i></div>
+            <ul class="submenu">
+              <li><a href="#">Pending</a></li>
+              <li><a href="#">Booked</a></li>
+              <li><a href="#">Issue</a></li>
+              <li><a href="#">Cancel</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item has-dropdown">
+            <div class="dropdown-header"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Refund</span> <i
+                class="fa-solid fa-chevron-right arrow"></i></div>
+            <ul class="submenu">
+              <li><a href="#">Create</a></li>
+              <li><a href="#">List</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item"><a href="#"><i class="fa-solid fa-passport"></i> <span>Visa Service</span></a></li>
+
+          <li class="nav-item has-dropdown">
+            <div class="dropdown-header"><i class="fa-solid fa-chart-line"></i> <span>Report</span> <i
+                class="fa-solid fa-chevron-right arrow"></i></div>
+            <ul class="submenu">
+              <li><a href="#">Today</a></li>
+              <li><a href="#">Month</a></li>
+              <li><a href="#">Week</a></li>
+              <li><a href="#">Year</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item has-dropdown">
+            <div class="dropdown-header"><i class="fa-solid fa-credit-card"></i> <span>Payment</span> <i
+                class="fa-solid fa-chevron-right arrow"></i></div>
+            <ul class="submenu">
+              <li><a href="#">Deposit</a></li>
+              <li><a href="#">Bank Account</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item has-dropdown">
+            <div class="dropdown-header"><i class="fa-solid fa-gears"></i> <span>Settings</span> <i
+                class="fa-solid fa-chevron-right arrow"></i></div>
+            <ul class="submenu">
+              <li><a href="#">Make UP</a></li>
+              <li><a href="#">About US</a></li>
+              <li><a href="#">Contact US</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main-content p-4">
+      <div class="hero-container">
+        <h1 class="text-white fw-bold mb-4">Let's explore the world <br> <span
+            style="color: var(--primary-color)">Together</span></h1>
+
+        <ul class="nav nav-tabs nav-tabs-custom" id="flightTabs" role="tablist">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#one-way">One
+              Way</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#round-trip">Round
+              Trip</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#multi-city">Multi
+              City</button></li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="one-way">
+            <div class="search-wrapper shadow-sm">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <div class="input-group-custom"><label>From</label><input type="text" value="Dhaka (DAC)">
+                    <div class="swap-circle"><i class="fa fa-exchange"></i></div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="input-group-custom"><label>To</label><input type="text" placeholder="Destination"></div>
+                </div>
+                <div class="col-md-2">
+                  <div class="input-group-custom"><label>Depart</label><input type="date"></div>
+                </div>
+                <div class="col-md-2">
+                  <div class="input-group-custom"><label>Travelers</label><input type="text" value="1 Adult, Economy"
+                      readonly></div>
+                </div>
+                <div class="col-md-2"><button class="btn-search-main"><i class="fa fa-search"></i> Search</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="round-trip">
+            <div class="search-wrapper shadow-sm">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <div class="input-group-custom"><label>From</label><input type="text" value="Dhaka (DAC)">
+                    <div class="swap-circle"><i class="fa fa-exchange"></i></div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="input-group-custom"><label>To</label><input type="text" placeholder="Destination"></div>
+                </div>
+                <div class="col-md-2">
+                  <div class="input-group-custom"><label>Depart</label><input type="date"></div>
+                </div>
+                <div class="col-md-2">
+                  <div class="input-group-custom"><label>Return</label><input type="date"></div>
+                </div>
+                <div class="col-md-2"><button class="btn-search-main"><i class="fa fa-search"></i> Search</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="multi-city">
+            <div class="search-wrapper shadow-sm">
+              <p class="text-muted small mb-2">Flight 1</p>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="input-group-custom"><label>From</label><input type="text" value="Dhaka"></div>
+                </div>
+                <div class="col-md-4">
+                  <div class="input-group-custom"><label>To</label><input type="text" value="Bangkok"></div>
+                </div>
+                <div class="col-md-4">
+                  <div class="input-group-custom"><label>Depart</label><input type="date"></div>
+                </div>
+              </div>
+              <button class="btn btn-outline-primary btn-sm mt-3">+ Add Another Flight</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      // Toggle logic
+      $("#sidebar-toggle").click(function () {
+        if ($(window).width() < 992) {
+          $("body").addClass("sidebar-open");
+        } else {
+          $("body").toggleClass("sidebar-mini");
+        }
+      });
+
+      // Close mobile sidebar
+      $("#close-sidebar, #sidebar-overlay").click(function () {
+        $("body").removeClass("sidebar-open");
+      });
+
+      // Dropdown logic
+      $(".dropdown-header").click(function () {
+        let p = $(this).closest(".nav-item");
+        $(".nav-item").not(p).removeClass("open");
+        p.toggleClass("open");
+      });
+    });
+  </script>
+</body>
+
+</html>
